@@ -43,6 +43,41 @@ regd_users.post("/login", (req, res) => {
 
 // Add a book review
 
+regd_users.post("/auth/review/:isbn", (req, res) => {
+    const isbn = req.params.isbn;
+    const review = req.body.review;
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: "Missing token" });
+    }
+
+    try {
+        const decoded = jwt.verify(token, "access");
+        const username = decoded.username;
+
+        if (!books[isbn]) {
+            return res.status(404).json({ message: `Book with ISBN ${isbn} not found` });
+        }
+
+        if (!review) {
+            return res.status(400).json({ message: "Review text is required" });
+        }
+
+        books[isbn].reviews[username] = review;
+
+        return res.status(200).json({
+            message: `Review posted successfully by ${username}.`,
+            reviews: books[isbn].reviews
+        });
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid or expired token" });
+    }
+});
+
+
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;
