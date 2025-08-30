@@ -45,7 +45,9 @@ regd_users.post("/login", (req, res) => {
 
 regd_users.post("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
-    const review = req.body.review;
+    //const review = req.body.review;
+    const review = req.query.review;
+
 
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
