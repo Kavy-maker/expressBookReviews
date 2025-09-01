@@ -87,6 +87,48 @@ regd_users.post("/auth/review/:isbn", (req, res) => {
     }
 });
 
+// Delete a book review (JWT-based, matches add/update style)
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const isbn = req.params.isbn;
+
+    // Get token from Authorization header
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    // If no token is provided
+    if (!token) {
+        return res.status(401).json({ message: "Missing token" });
+    }
+
+    try {
+        // Verify token and extract username
+        const decoded = jwt.verify(token, "access");
+        const username = decoded.username;
+
+        // Check if the book exists
+        const book = books[isbn];
+        if (!book) {
+            return res.status(404).json({ message: `Book with ISBN ${isbn} not found` });
+        }
+
+        // Check if this user has a review for the book
+        if (!book.reviews[username]) {
+            return res.status(404).json({ message: `No review found for ${username} on ISBN ${isbn}` });
+        }
+
+        // Delete the user's review
+        delete book.reviews[username];
+
+        return res.status(200).json({
+            message: `Review by ${username} deleted successfully.`,
+            reviews: book.reviews
+        });
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid or expired token" });
+    }
+});
+
+
 
 
 module.exports.authenticated = regd_users;
