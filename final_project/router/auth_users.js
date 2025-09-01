@@ -45,39 +45,48 @@ regd_users.post("/login", (req, res) => {
 
 regd_users.post("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
-    //const review = req.body.review;
-    const review = req.query.review;
+    const review = req.body.review;
 
-
+    // Get token from Authorization header
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
+    // If no token is provided
     if (!token) {
         return res.status(401).json({ message: "Missing token" });
     }
 
     try {
+        // Verify token and extract username
         const decoded = jwt.verify(token, "access");
         const username = decoded.username;
 
-        if (!books[isbn]) {
+        // Check if book exists
+        const book = books[isbn];
+        if (!book) {
             return res.status(404).json({ message: `Book with ISBN ${isbn} not found` });
         }
 
+        // Check if review is provided
         if (!review) {
             return res.status(400).json({ message: "Review text is required" });
         }
 
-        books[isbn].reviews[username] = review;
+        // Add or update review
+        const isUpdate = Boolean(book.reviews[username]);
+        book.reviews[username] = review;
 
         return res.status(200).json({
-            message: `Review posted successfully by ${username}.`,
-            reviews: books[isbn].reviews
+            message: isUpdate
+                ? `Review updated successfully by ${username}.`
+                : `Review added successfully by ${username}.`,
+            reviews: book.reviews
         });
     } catch (err) {
         return res.status(403).json({ message: "Invalid or expired token" });
     }
 });
+
 
 
 module.exports.authenticated = regd_users;
