@@ -29,6 +29,24 @@ public_users.get('/books', function (req, res) {
     return res.status(200).json(books);
 });
 
+// Task 10: Get list of books using async/await
+public_users.get('/async/books', async function (req, res) {
+    try {
+        // Simulate async operation with a Promise
+        const getBooks = () => {
+            return new Promise((resolve) => {
+                setTimeout(() => resolve(books), 100); // small delay to mimic async
+            });
+        };
+
+        const allBooks = await getBooks();
+        return res.status(200).json(allBooks);
+    } catch (error) {
+        console.error("Error fetching books:", error.message);
+        return res.status(500).json({ message: "Error fetching books" });
+    }
+});
+
 // Get the book list available in the shop
 public_users.get('/', function (req, res) {
     //Write your code here
@@ -49,6 +67,33 @@ public_users.get('/isbn/:isbn', function (req, res) {
     }
 });
 
+//Task 11: Get book details by ISBN using async/await (Promise)
+public_users.get('/async/isbn/:isbn', async function (req, res) {
+    try {
+        const isbn = req.params.isbn;
+
+        // Simulate async operation with a Promise
+        const getBookByISBN = (isbn) => {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const book = books[isbn];
+                    if (book) {
+                        resolve(book);
+                    } else {
+                        reject(new Error("Book not found"));
+                    }
+                }, 100); // small delay to mimic async
+            });
+        };
+
+        const book = await getBookByISBN(isbn);
+        return res.status(200).json(book);
+
+    } catch (error) {
+        return res.status(404).json({ message: error.message });
+    }
+});
+
 // Get book details based on author
 public_users.get('/author/:author', function (req, res) {
     const author = req.params.author;
@@ -62,6 +107,36 @@ public_users.get('/author/:author', function (req, res) {
         return res.status(404).json({ message: "Author not found" });
     }
 });
+
+//Task 12: Get book details by Author using async/await (Promise)
+public_users.get('/async/author/:author', async function (req, res) {
+    try {
+        const authorParam = req.params.author;
+
+        //async operation with a Promise
+        const getBooksByAuthor = (author) => {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const bookList = Object.values(books);
+                    const booksByAuthor = bookList.filter(book => book.author === author);
+
+                    if (booksByAuthor.length > 0) {
+                        resolve(booksByAuthor);
+                    } else {
+                        reject(new Error("Author not found"));
+                    }
+                }, 100); // small delay to mimic async
+            });
+        };
+
+        const matchedBooks = await getBooksByAuthor(authorParam);
+        return res.status(200).json(matchedBooks);
+
+    } catch (error) {
+        return res.status(404).json({ message: error.message });
+    }
+});
+
 
 
 // Get all books based on title
@@ -83,6 +158,42 @@ public_users.get('/title/:title', function (req, res) {
 
     return res.status(200).json(booksByTitle);
 });
+
+// Task 13: Get book details by Title using async/await (Promise)
+public_users.get('/async/title/:title', async function (req, res) {
+    try {
+        const titleParam = req.params.title.toLowerCase();
+
+        // Simulate async operation with a Promise
+        const getBooksByTitle = (title) => {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const booksByTitle = [];
+
+                    Object.keys(books).forEach(isbn => {
+                        const book = books[isbn];
+                        if (book.title.toLowerCase() === title) {
+                            booksByTitle.push(book);
+                        }
+                    });
+
+                    if (booksByTitle.length > 0) {
+                        resolve(booksByTitle);
+                    } else {
+                        reject(new Error("No books found with the given title"));
+                    }
+                }, 100); // small delay to mimic async
+            });
+        };
+
+        const matchedBooks = await getBooksByTitle(titleParam);
+        return res.status(200).json(matchedBooks);
+
+    } catch (error) {
+        return res.status(404).json({ message: error.message });
+    }
+});
+
 
 
 //  Get book review
